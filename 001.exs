@@ -1,0 +1,1 @@
+IO.puts Euler.sum_multiples([3, 5], 1000)
