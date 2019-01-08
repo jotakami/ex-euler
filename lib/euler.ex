@@ -45,6 +45,8 @@ defmodule Euler do
   
   def digits?(n, d), do: length(Integer.digits(n)) == d
   
+  def digit_sum(n) when is_integer(n), do: Integer.digits(n) |> Enum.sum
+  
   def product([]), do: 1
   def product(list), do: Enum.reduce(list, &*/2)
   
@@ -58,6 +60,9 @@ defmodule Euler do
       x, {p, buffer} -> {[], {x*p, buffer ++ [x]}}
     end)
   end
+  
+  def factorial(0), do: 1
+  def factorial(n) when n > 0, do: product(1..n)
   
   def pythagorean_triples() do
     Stream.iterate(2, &(&1+2))
@@ -75,7 +80,9 @@ defmodule Euler do
   
   def is_square(x), do: :math.sqrt(x) |> trunc |> :math.pow(2) |> Kernel.==(x)
   
-  def triangle_stream, do: Stream.unfold(1, fn x -> {div(x*(x+1), 2), x+1} end)
+  def count_stream(), do: Stream.iterate(1, &(&1+1))
+  
+  def triangle_stream(), do: count_stream() |> Stream.scan(&(&1+&2))
   
   def collatz(1), do: nil
   def collatz(n) when rem(n, 2) == 1, do: 3*n+1
