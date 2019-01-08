@@ -12,7 +12,8 @@ defmodule Euler do
     |> Enum.sum
   end
   
-  def factors(n) do
+  def factors(1), do: [1]
+  def factors(n) when n > 1 do
     pf = Primes.factorize(n) |> Enum.to_list
     factors(pf, 1)
     |> Enum.sort
@@ -44,6 +45,7 @@ defmodule Euler do
   
   def digits?(n, d), do: length(Integer.digits(n)) == d
   
+  def product([]), do: 1
   def product(list), do: Enum.reduce(list, &*/2)
   
   def stream_product(digits, k) do
@@ -72,4 +74,35 @@ defmodule Euler do
   def next_spiral(n), do: (trunc(:math.sqrt(n) + 1) |> div(2)) * 2 + n
   
   def is_square(x), do: :math.sqrt(x) |> trunc |> :math.pow(2) |> Kernel.==(x)
+  
+  def triangle_stream, do: Stream.unfold(1, fn x -> {div(x*(x+1), 2), x+1} end)
+  
+  def collatz(1), do: nil
+  def collatz(n) when rem(n, 2) == 1, do: 3*n+1
+  def collatz(n), do: div(n, 2)
+  
+  def collatz_count(m, x) when x > 0 do
+    if Map.has_key?(m, x) do
+      m
+    else
+      y = collatz(x)
+      m = collatz_count(m, y)
+      Map.put(m, x, Map.get(m, y) + 1)
+    end
+  end
+  
+  def comb(_, 0), do: 1
+  def comb(n, 1), do: n
+  def comb(n, r) when n == r, do: 1
+  def comb(n, r) when n > r, do: div(product(r+1..n), product(1..n-r))
+  
+  def letter_count(n) do
+    cond do
+      n < 10        -> Enum.at([0, 3, 3, 5, 4, 4, 3, 5, 5, 4], n)
+      n < 20        -> Enum.at([3, 6, 6, 8, 8, 7, 7, 9, 8, 8], n-10)
+      n < 100       -> Enum.at([6, 6, 5, 5, 5, 7, 6, 6], div(n, 10)-2) + letter_count(rem(n, 10))
+      n < 1_000     -> letter_count(div(n, 100)) + if(rem(n, 100) == 0, do: 7, else: 10 + letter_count(rem(n, 100)))
+      n < 1_000_000 -> letter_count(div(n, 1000)) + 8 + letter_count(rem(n, 1000))
+    end
+  end
 end
