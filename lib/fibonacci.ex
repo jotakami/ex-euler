@@ -8,6 +8,6 @@ defmodule Fibonacci do
   """
   @spec stream() :: Stream.t
   def stream() do
-    Stream.unfold({0, 1}, fn {f, g} -> {f+g, {g, f+g}} end)
+    Stream.unfold({1, 0}, fn {f, g} -> {f+g, {g, f+g}} end)
   end
 end

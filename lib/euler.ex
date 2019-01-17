@@ -2,6 +2,12 @@ defmodule Euler do
   @moduledoc """
   This module defines general-purpose functions used in solving Project Euler challenges.
   """
+  
+  defmacro divides?(d, n) do
+    quote do
+      rem(unquote(n), unquote(d)) == 0
+    end
+  end
 
   @doc """
   Calculates the sum of all natural numbers less than max which have any of the given factors.
@@ -12,17 +18,18 @@ defmodule Euler do
     |> Enum.sum
   end
   
-  def factors(1), do: [1]
-  def factors(n) when n > 1 do
-    pf = Primes.factorize(n) |> Enum.to_list
-    factors(pf, 1)
+  def factors(n), do: factors(n, Primes.stream)
+  def factors(1, _), do: [1]
+  def factors(n, primes) when n > 1 do
+    pf = Primes.factorize(n, primes) |> Enum.to_list
+    expand_factors(pf, 1)
     |> Enum.sort
   end
   
-  defp factors([], f), do: [f]
-  defp factors(pf, f) do
+  defp expand_factors([], f), do: [f]
+  defp expand_factors(pf, f) do
     Enum.dedup(pf)
-    |> Enum.flat_map(fn p -> Enum.drop_while(pf, &(&1 < p)) |> tl |> factors(f*p) end)
+    |> Enum.flat_map(fn p -> Enum.drop_while(pf, &(&1 < p)) |> tl |> expand_factors(f*p) end)
     |> List.insert_at(-1, f)
   end
   
@@ -112,4 +119,59 @@ defmodule Euler do
       n < 1_000_000 -> letter_count(div(n, 1000)) + 8 + letter_count(rem(n, 1000))
     end
   end
+  
+  def abundant?(n), do: abundant?(n, Primes.stream)
+  def abundant?(n, primes), do: factors(n, primes) |> Enum.sum |> Kernel.-(n) |> Kernel.>(n)
+  
+  def nth_lex_perm(chars, n), do: find_lex_perm(Enum.sort(chars), n-1)
+  defp find_lex_perm([], 0), do: []
+  defp find_lex_perm(chars, n) do
+    r = factorial(length(chars)-1)
+    {d, chars} = List.pop_at(chars, div(n, r))
+    [d | find_lex_perm(chars, rem(n, r))]
+  end
+  
+  def pow(_, 0), do: 1
+  def pow(n, 1), do: n
+  def pow(n, k) when rem(k, 2) == 0, do: pow(n*n, div(k, 2))
+  def pow(n, k), do: n * pow(n, k-1)
+  
+  def mult_order(n, p) do
+    Stream.iterate(n, &(&1*n))
+    |> Enum.reduce_while([], fn x, a ->
+         k = rem(x, p)
+         case Enum.find_index(a, &(&1 == k)) do
+           nil -> {:cont, a ++ [k]}
+           i   -> {:halt, length(a) - i}
+         end
+       end)
+  end
+  
+  def repetend_period(n) do
+    f = Primes.factorize(n) |> Enum.to_list
+    g = Enum.reject(f, &(&1 in [2, 5]))
+    cond do
+      g == []                   -> 0
+      hd(f) == n                -> mult_order(10, n)
+      length(Enum.uniq(f)) == 1 ->
+        if divides?(product(f), pow(10, n-1)) do
+          repetend_period(hd(f))
+        else
+          repetend_period(hd(f)) * product(f)
+        end
+      true ->
+        Enum.chunk_by(g, &(&1))
+        |> Enum.map(&repetend_period(product(&1)))
+        |> lcm
+    end
+  end
+  
+  def gcd(0, _), do: 0
+  def gcd(a, b) when a == b, do: a
+  def gcd(a, b) when b > a, do: gcd(b, a)
+  def gcd(a, b), do: gcd(a-b, b)
+  
+  def lcm(a, b), do: div(a*b, gcd(a, b))
+  def lcm([]), do: 1
+  def lcm(list) when is_list(list), do: lcm(hd(list), lcm(tl(list)))
 end

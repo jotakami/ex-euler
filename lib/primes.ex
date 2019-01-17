@@ -73,8 +73,11 @@ defmodule Primes do
   Calculates the prime factorization of the given integer.
   """
   @spec factorize(pos_integer) :: [pos_integer, ...]
-  def factorize(n) when n > 1 do
-    Stream.transform(stream(), n, fn p, n ->
+  @spec factorize(pos_integer, Enum.t) :: [pos_integer, ...]
+  def factorize(n), do: factorize(n, stream())
+  def factorize(1, _), do: []
+  def factorize(n, primes) when n > 1 do
+    Stream.transform(primes, n, fn p, n ->
       cond do
         n == 1            -> {:halt, 1}
         p > :math.sqrt(n) -> {[n], 1}
