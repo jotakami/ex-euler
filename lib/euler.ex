@@ -271,4 +271,13 @@ defmodule Euler do
   end
   
   def perm?(x, y), do: Enum.sort(x) == Enum.sort(y)
+  
+  def min_grid_path(col) do
+    hd(col)
+    |> Tuple.to_list
+    |> Enum.sum
+    |> List.wrap
+    |> Kernel.++(tl(col))
+    |> Enum.scan(fn {l, r}, p -> min(l + r, l + p) end)
+  end
 end
