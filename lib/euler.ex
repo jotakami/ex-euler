@@ -341,4 +341,13 @@ defmodule Euler do
       true     -> {1, Map.put(memo, x, 1)}
     end
   end
+  
+  def rectangles(m, n) when m < n, do: rectangles(n, m)
+  def rectangles(m, n) do
+    Enum.map(0..m-1, fn i ->
+      Enum.map(0..n-1, &((i+1)*(&1+1)))
+      |> Enum.sum
+    end)
+    |> Enum.sum
+  end
 end
