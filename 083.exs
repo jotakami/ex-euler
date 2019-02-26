@@ -6,5 +6,8 @@ do
   |> Matrix.min_path
   |> Matrix.rotate
   |> Matrix.iter_min_path
-  |> IO.inspect
+  |> Map.get(:m)
+  |> hd
+  |> hd
+  |> IO.puts
 end

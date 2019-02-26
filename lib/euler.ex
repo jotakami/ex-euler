@@ -280,4 +280,65 @@ defmodule Euler do
     |> Kernel.++(tl(col))
     |> Enum.scan(fn {l, r}, p -> min(l + r, l + p) end)
   end
+  
+  def sums(n) when n > 2 do
+    sums_memoized(n, 3, 2, %{})
+    |> Map.get({n, n-1})
+  end
+  
+  def sums_memoized(0, _k, _memo), do: 1
+  def sums_memoized(1, _k, _memo), do: 1
+  def sums_memoized(_m, 1, _memo), do: 1
+  def sums_memoized(m, k, memo) when m <= k, do: sums_memoized(m, m-1, memo) + 1
+  def sums_memoized(m, k, memo), do: Map.get(memo, {m, k})
+  
+  def sums_memoized(n, _m, k, memo) when n == k, do: memo
+  def sums_memoized(n, m, k, memo) when m == k, do: sums_memoized(n, m+1, 2, memo)
+  def sums_memoized(n, m, k, memo) do
+    sum = Stream.unfold(m, fn
+        x when x < 0 -> nil
+        x            -> {x, x-k}
+      end)
+      |> Stream.map(&sums_memoized(&1, k-1, memo))
+      |> Enum.sum
+    sums_memoized(n, m, k+1, Map.put(memo, {m, k}, sum))
+  end
+  
+  def coin_piles(n), do: coin_piles(n, 3, 2, %{})
+  
+  def coin_piles(0, _k, _memo), do: 1
+  def coin_piles(1, _k, _memo), do: 1
+  def coin_piles(_m, 1, _memo), do: 1
+  def coin_piles(m, k, memo) when m <= k, do: coin_piles(m, m-1, memo) + 1
+  def coin_piles(m, k, memo), do: Map.get(memo, {m, k})
+  
+  def coin_piles(n, m, k, memo) when m == k do
+    if rem(coin_piles(m, k, memo), n) == 0 do
+      m
+    else
+      coin_piles(n, m+1, 2, memo)
+    end
+  end
+  def coin_piles(n, m, k, memo) do
+    sum = Stream.unfold(m, fn
+        x when x < 0 -> nil
+        x            -> {x, x-k}
+      end)
+      |> Stream.map(&coin_piles(&1, k-1, memo))
+      |> Enum.sum
+    coin_piles(n, m, k+1, Map.put(memo, {m, k}, sum))
+  end
+  
+  def digit_factorial_chain(x, memo) do
+    with :error    <- Map.fetch(memo, x),
+         dfs       <- Integer.digits(x) |> Enum.map(&factorial/1) |> Enum.sum,
+         false     <- dfs == x,
+         {n, memo} <- digit_factorial_chain(dfs, memo)
+    do
+      {n+1, Map.put(memo, x, n+1)}
+    else
+      {:ok, n} -> {n, memo}
+      true     -> {1, Map.put(memo, x, 1)}
+    end
+  end
 end
